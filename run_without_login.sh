@@ -1,9 +1,15 @@
 #!/bin/bash
 
-# Set HF_TOKEN to None to avoid Hugging Face authentication
-export HF_TOKEN="None"
-# Allow online traffic but don't authenticate
-export HUGGINGFACE_ACCESS_TOKEN="None"
+# Check if a token is provided as an argument
+if [ "$1" ]; then
+  export HF_TOKEN="$1"
+else
+  # Ask the user for their Hugging Face token
+  read -p "Enter your Hugging Face token: " HF_TOKEN
+  export HF_TOKEN
+fi
+
+export HUGGINGFACE_ACCESS_TOKEN="$HF_TOKEN"
 # Set timeout to be longer for model downloads
 export HF_HUB_DOWNLOAD_TIMEOUT=300
 
