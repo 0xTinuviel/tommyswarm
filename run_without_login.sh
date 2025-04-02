@@ -20,9 +20,10 @@ ROOT=$PWD
 export CONNECT_TO_TESTNET=True
 export ORG_ID=a1257f1c-ca13-4850-97f1-bbf5b292ef28  # Using the default org ID from Dockerfile
 
-# Set up multi-address configuration with forwarded ports
-export HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/31253"  # Your node's listening port (forwarded from 38331)
-export PEER_MULTI_ADDRS="/ip4/38.101.215.13/tcp/30417/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ"  # Coordinator node with forwarded port
+# Set up multi-address configuration based on port forwarding
+export HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/38331"  # Internal listening port (appears as 31253 externally)
+# Connect to coordinator using the external port 30417 which forwards to their internal 30002
+export PEER_MULTI_ADDRS="/ip4/38.101.215.13/tcp/30417/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ"
 export PUB_MULTI_ADDRS=""  # Leave empty for auto-configuration
 
 # Set up identity path
@@ -63,7 +64,6 @@ echo "Starting training..."
 python -m hivemind_exp.gsm8k.train_single_gpu \
     --hf_token "$HUGGINGFACE_ACCESS_TOKEN" \
     --identity_path "$IDENTITY_PATH" \
-    --public_maddr "$PUB_MULTI_ADDRS" \
-    --initial_peers "$PEER_MULTI_ADDRS" \
     --host_maddr "$HOST_MULTI_ADDRS" \
+    --initial_peers "$PEER_MULTI_ADDRS" \
     --config "$CONFIG_PATH" 
