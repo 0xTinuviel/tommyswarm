@@ -34,6 +34,7 @@ class GRPOArguments:
 
     #Hugging Face Hub arguments
     hf_token: str | None = None
+    token: str | None = None  # Token for model loading
 
 
 class GRPORunner:
@@ -43,6 +44,22 @@ class GRPORunner:
         model_init_kwargs["use_cache"] = (
             False if args.gradient_checkpointing else model_init_kwargs.get("use_cache")
         )
+        # Add token to model_init_kwargs if it exists
+        if hasattr(args, "token"):
+            model_init_kwargs["token"] = args.token
+            
+        # If the token is None, try local files only to avoid authentication
+        if hasattr(args, "token") and args.token in [None, "None"]:
+            try:
+                # First try with local_files_only=True
+                logger.info(f"Attempting to load model {model_name} from local files only")
+                return AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True, **model_init_kwargs)
+            except Exception as e:
+                logger.info(f"Failed to load model from local files: {e}")
+                logger.info("Falling back to online loading with no authentication")
+                # Add a flag to avoid authentication
+                model_init_kwargs["use_auth_token"] = False
+                
         return AutoModelForCausalLM.from_pretrained(model_name, **model_init_kwargs)
 
     def get_tokenizer_name(self, model_args: ModelConfig, script_args: GRPOArguments):
@@ -110,17 +127,43 @@ class GRPORunner:
         if (grpo_args.hf_token not in [None, "None"]):
             training_args.push_to_hub_token = grpo_args.hf_token
             login(token=training_args.push_to_hub_token, add_to_git_credential=True)
+            model_args.token = grpo_args.hf_token
         else:
             training_args.push_to_hub_token = None
+            model_args.token = None
 
         ################
         # Load tokenizer
         ################
-        tokenizer = AutoTokenizer.from_pretrained(
-            self.get_tokenizer_name(model_args, grpo_args),
-            revision=model_args.model_revision,
-            trust_remote_code=model_args.trust_remote_code,
-        )
+        tokenizer_kwargs = {
+            "revision": model_args.model_revision,
+            "trust_remote_code": model_args.trust_remote_code,
+        }
+        
+        # If token is None, try to load from local files first
+        if model_args.token in [None, "None"]:
+            try:
+                logger.info(f"Attempting to load tokenizer from local files only")
+                tokenizer = AutoTokenizer.from_pretrained(
+                    self.get_tokenizer_name(model_args, grpo_args),
+                    local_files_only=True,
+                    **tokenizer_kwargs
+                )
+            except Exception as e:
+                logger.info(f"Failed to load tokenizer from local files: {e}")
+                logger.info("Falling back to online loading with no authentication")
+                tokenizer_kwargs["use_auth_token"] = False
+                tokenizer = AutoTokenizer.from_pretrained(
+                    self.get_tokenizer_name(model_args, grpo_args),
+                    **tokenizer_kwargs
+                )
+        else:
+            tokenizer_kwargs["token"] = model_args.token
+            tokenizer = AutoTokenizer.from_pretrained(
+                self.get_tokenizer_name(model_args, grpo_args),
+                **tokenizer_kwargs
+            )
+        
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 

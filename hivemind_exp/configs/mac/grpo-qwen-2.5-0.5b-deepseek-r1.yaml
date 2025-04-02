@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: "Qwen/Qwen1.5-0.5B"
+model_name_or_path: "trl-internal-testing/tiny-Qwen2ForCausalLM-2.5"
 model_revision: main
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2

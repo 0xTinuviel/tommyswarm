@@ -1,12 +1,18 @@
 #!/bin/bash
 
+# Set HF_TOKEN to None to avoid Hugging Face authentication
+export HF_TOKEN="None"
+# Disable Hugging Face Hub
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=0  # Keep datasets online since we need to download GSM8K
+
 # Set the root directory
 ROOT=$PWD
 
 # Set required environment variables
 export CONNECT_TO_TESTNET=True
 export ORG_ID=a1257f1c-ca13-4850-97f1-bbf5b292ef28  # Using the default org ID from Dockerfile
-export HF_TOKEN=None  # Set to None to skip HuggingFace integration
 export HUGGINGFACE_ACCESS_TOKEN=None
 
 # Set up multi-address configuration with forwarded ports

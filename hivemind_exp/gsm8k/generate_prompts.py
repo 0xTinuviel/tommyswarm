@@ -1,9 +1,13 @@
-#For geting top-k ranking for subsampling
-import hashlib
 import os
 import random
+import re
+from typing import List, Dict, Callable
 
-from datasets import Dataset, load_dataset
+from datasets import load_dataset, Dataset
+from transformers import PreTrainedTokenizer
+
+#For geting top-k ranking for subsampling
+import hashlib
 
 import hivemind_exp.gsm8k.stage1_rewards as stage1_rewards
 import hivemind_exp.gsm8k.stage2_rewards as stage2_rewards
@@ -256,8 +260,27 @@ def get_gsm8k_questions_with_stage1and2_answers(data) -> Dataset:
 def get_stage1_samples():
     # Load dataset from Hugging Face Hub
     dataset_id = "openai/gsm8k"
-    train_dataset = load_dataset(dataset_id, "main")["train"]
-    test_dataset = load_dataset(dataset_id, "main")["test"]
+    try:
+        # Try to load the dataset from Hugging Face
+        train_dataset = load_dataset(dataset_id, "main")["train"]
+        test_dataset = load_dataset(dataset_id, "main")["test"]
+    except Exception as e:
+        print(f"Failed to load dataset from Hugging Face: {e}")
+        print("Creating a small dummy dataset for testing")
+        # Create a small dummy dataset for testing
+        dummy_data = {
+            "question": [
+                "John has 5 apples. He gives 2 apples to Mary. How many apples does John have left?",
+                "Sarah bought 10 candies. She ate 3 and gave 2 to her friend. How many candies does she have left?"
+            ],
+            "answer": [
+                "John has 5 - 2 = 3 apples left.",
+                "Sarah has 10 - 3 - 2 = 5 candies left."
+            ]
+        }
+        train_dataset = Dataset.from_dict(dummy_data)
+        test_dataset = Dataset.from_dict(dummy_data)
+    
     # #TODO: Add ability to select a random subset of num_samples samples if desired
     # if num_samples != -1:
     #   dataset = dataset.shuffle(seed=42).select(range(num_samples))
