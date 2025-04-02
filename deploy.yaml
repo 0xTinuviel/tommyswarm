@@ -1,0 +1,29 @@
+---
+version: "2.0"
+services:
+  rl-swarm:
+    image: your-registry/rl-swarm:latest
+    env:
+      - ORG_ID=a1257f1c-ca13-4850-97f1-bbf5b292ef28
+      - HUGGINGFACE_ACCESS_TOKEN=${HF_TOKEN}
+    resources:
+      cpu:
+        units: 4
+      memory:
+        size: 16Gi
+      storage:
+        size: 100Gi
+      gpu:
+        units: 1
+        attributes:
+          vendor:
+            nvidia:
+              model: "rtx3090"
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+    params:
+      storage:
+        mount: /home/gensyn/rl_swarm
