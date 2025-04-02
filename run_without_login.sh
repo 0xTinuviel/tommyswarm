@@ -2,10 +2,10 @@
 
 # Set HF_TOKEN to None to avoid Hugging Face authentication
 export HF_TOKEN="None"
-# Disable Hugging Face Hub
-export HF_HUB_OFFLINE=1
-export TRANSFORMERS_OFFLINE=1
-export HF_DATASETS_OFFLINE=0  # Keep datasets online since we need to download GSM8K
+# Allow online traffic but don't authenticate
+export HUGGINGFACE_ACCESS_TOKEN="None"
+# Set timeout to be longer for model downloads
+export HF_HUB_DOWNLOAD_TIMEOUT=300
 
 # Set the root directory
 ROOT=$PWD
@@ -13,7 +13,6 @@ ROOT=$PWD
 # Set required environment variables
 export CONNECT_TO_TESTNET=True
 export ORG_ID=a1257f1c-ca13-4850-97f1-bbf5b292ef28  # Using the default org ID from Dockerfile
-export HUGGINGFACE_ACCESS_TOKEN=None
 
 # Set up multi-address configuration with forwarded ports
 export HOST_MULTI_ADDRS="/ip4/0.0.0.0/tcp/31253"  # Your node's listening port
